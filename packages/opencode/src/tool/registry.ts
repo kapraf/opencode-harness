@@ -299,15 +299,15 @@ export const layer: Layer.Layer<
             parameters: tool.parameters,
           }
           yield* plugin.trigger("tool.definition", { toolID: tool.id }, output)
+          const dynamic =
+            tool.id === TaskTool.id
+              ? yield* describeTask(input.agent)
+              : tool.id === SkillTool.id
+                ? yield* describeSkill(input.agent)
+                : undefined
           return {
             id: tool.id,
-            description: [
-              output.description,
-              tool.id === TaskTool.id ? yield* describeTask(input.agent) : undefined,
-              tool.id === SkillTool.id ? yield* describeSkill(input.agent) : undefined,
-            ]
-              .filter(Boolean)
-              .join("\n"),
+            description: dynamic ?? output.description,
             parameters: output.parameters,
             execute: tool.execute,
             formatValidationError: tool.formatValidationError,
