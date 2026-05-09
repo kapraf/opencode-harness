@@ -1,6 +1,8 @@
 import type { KVNamespaceListOptions, KVNamespaceListResult, KVNamespacePutOptions } from "@cloudflare/workers-types"
 import { Resource as ResourceBase } from "sst"
 import Cloudflare from "cloudflare"
+import type { NamespaceBulkGetResponse } from "cloudflare/resources/kv/namespaces/namespaces"
+import type { KeysCursorPaginationAfter } from "cloudflare/resources/kv/namespaces/keys"
 
 export const waitUntil = async (promise: Promise<any>) => {
   await promise
@@ -34,7 +36,7 @@ export const Resource = new Proxy(
                   keys: Array.isArray(k) ? k : [k],
                   account_id: accountId,
                 })
-                .then((result) => (isMulti ? new Map(Object.entries(result?.values ?? {})) : result?.values?.[k]))
+                .then((result: NamespaceBulkGetResponse | null) => (isMulti ? new Map(Object.entries(result?.values ?? {})) : result?.values?.[k]))
             },
             put: (k: string, v: string, opts?: KVNamespacePutOptions) =>
               client.kv.namespaces.values.update(namespaceId, k, {
@@ -54,7 +56,7 @@ export const Resource = new Proxy(
                   account_id: accountId,
                   prefix: opts?.prefix ?? undefined,
                 })
-                .then((result) => {
+                .then((result: KeysCursorPaginationAfter) => {
                   return {
                     keys: result.result,
                     list_complete: true,
